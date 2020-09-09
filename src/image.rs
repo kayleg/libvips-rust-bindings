@@ -18,6 +18,9 @@ pub struct VipsImage {
     pub(crate) ctx: *mut bindings::VipsImage,
 }
 
+unsafe impl Send for VipsImage {}
+unsafe impl Sync for VipsImage {}
+
 #[derive(Debug, Clone)]
 pub struct VipsInterpolate {
     pub(crate) ctx: *mut bindings::VipsInterpolate,
@@ -607,11 +610,7 @@ impl VipsSource {
     pub fn decode(&mut self) -> Result<()> {
         unsafe {
             let result = bindings::vips_source_decode(self.ctx);
-            utils::result(
-                result,
-                (),
-                Error::OperationError("Error on vips decode"),
-            )
+            utils::result(result, (), Error::OperationError("Error on vips decode"))
         }
     }
 
@@ -761,7 +760,8 @@ impl VipsTarget {
 
     pub fn writes(&mut self, text: &str) -> Result<()> {
         unsafe {
-            let cstr = CString::new(text).map_err(|_| Error::OperationError("Cannot initialize C string"))?;
+            let cstr = CString::new(text)
+                .map_err(|_| Error::OperationError("Cannot initialize C string"))?;
             let res = bindings::vips_target_writes(self.ctx, cstr.as_ptr());
             if res == -1 {
                 Err(Error::OperationError("Could not write to buffer"))
@@ -773,7 +773,8 @@ impl VipsTarget {
 
     pub fn write_amp(&mut self, text: &str) -> Result<()> {
         unsafe {
-            let cstr = CString::new(text).map_err(|_| Error::OperationError("Cannot initialize C string"))?;
+            let cstr = CString::new(text)
+                .map_err(|_| Error::OperationError("Cannot initialize C string"))?;
             let res = bindings::vips_target_write_amp(self.ctx, cstr.as_ptr());
             if res == -1 {
                 Err(Error::OperationError("Could not write to buffer"))
